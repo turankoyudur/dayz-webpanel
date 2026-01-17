@@ -1,0 +1,20 @@
+{
+  "name": "dayz-local-panel",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DayZ Local Panel (OmegaManager / CFTools inspired) - self-hosted DayZ server manager with file-based storage",
+  "workspaces": [
+    "apps/server",
+    "apps/web"
+  ],
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "build": "npm -w @dayz-panel/web run build && npm -w @dayz-panel/server run build",
+    "start": "npm -w @dayz-panel/server run start",
+    "dev": "npm -w @dayz-panel/server run dev",
+    "dev:full": "concurrently -n SERVER,WEB \"npm -w @dayz-panel/server run dev\" \"npm -w @dayz-panel/web run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

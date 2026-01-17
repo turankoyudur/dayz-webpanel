@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+apps/server/dist/
+apps/web/dist/
+
+# Local runtime files
+logs/
+*.log
+
+# Secrets / data
+/data/SystemConfig/config.local.json
+/data/SystemConfig/*.key
+
+# OS
+.DS_Store
+Thumbs.db
