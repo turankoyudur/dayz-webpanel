@@ -1,0 +1,113 @@
+// Prisma schema for DayZ Web Panel
+// - SQLite local DB (Windows friendly)
+// - Designed to be extensible for multiple server instances later
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  // NOTE: schema.prisma lives under /prisma, so we use ../data/... to place the DB at repoRoot/data
+  url      = env("DATABASE_URL")
+}
+
+model Setting {
+  /// Unique config key (e.g. "default.dayzPath", "default.steamcmdPath")
+  key       String   @id
+  /// Value stored as string (JSON allowed)
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/// Logical server instances.
+///
+/// v0.3+: The panel supports multiple DayZ instances (per-instance settings + runtime folders).
+model Instance {
+  /// Stable instance identifier used in URLs + folder names.
+  id          String   @id
+  /// Optional human-friendly label.
+  displayName String?
+
+  archivedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mods       InstanceMod[]
+  actionLogs ActionLog[]
+  errorLogs  ErrorLog[]
+}
+
+model Mod {
+  id           Int      @id @default(autoincrement())
+  /// Steam Workshop published file id
+  workshopId   String   @unique
+  name         String?
+  /// Folder name that the panel uses under the server root (e.g. "CF" -> "@CF")
+  /// This is what gets passed in -mod=@<folderName> when starting the server.
+  folderName   String?
+  description  String?
+  sizeBytes    Int?
+  lastUpdateTs Int?     // unix timestamp (best-effort)
+
+  /// Whether this mod should be included in the server launch parameter list.
+  ///
+  /// NOTE (v0.3+): This flag is currently GLOBAL.
+  /// Per-instance enable/order is tracked in InstanceMod (future sprint).
+  enabled      Boolean  @default(false)
+
+  /// Best-effort detected installation path (e.g. .../steamapps/workshop/content/221100/<id>)
+  installedPath String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  instances    InstanceMod[]
+}
+
+/// Per-instance mod enable/order (future sprint).
+model InstanceMod {
+  id         Int      @id @default(autoincrement())
+  instanceId String
+  modId      Int
+
+  enabled    Boolean  @default(true)
+  sortOrder  Int      @default(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  mod        Mod      @relation(fields: [modId], references: [id], onDelete: Cascade)
+
+  @@unique([instanceId, modId])
+  @@index([instanceId])
+}
+
+model ActionLog {
+  id        Int      @id @default(autoincrement())
+  at        DateTime @default(now())
+  /// Optional username / source (future: auth)
+  actor     String? 
+  /// Logical action type (e.g. "MOD_ENABLE", "SERVER_START")
+  action    String
+  /// JSON string for structured details
+  details   String?
+
+  instanceId String?
+  instance   Instance? @relation(fields: [instanceId], references: [id])
+}
+
+model ErrorLog {
+  id        Int      @id @default(autoincrement())
+  at        DateTime @default(now())
+  /// Stable error code used by UI + logs
+  code      String
+  message   String
+  stack     String?
+  context   String?
+
+  instanceId String?
+  instance   Instance? @relation(fields: [instanceId], references: [id])
+}

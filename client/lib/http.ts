@@ -1,0 +1,59 @@
+/**
+ * Small fetch wrapper for the DayZ panel.
+ *
+ * - Uses relative /api routes (same origin)
+ * - Converts non-2xx responses into typed errors
+ */
+export async function api<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+  });
+
+  if (!res.ok) {
+    let payload: any = null;
+    try {
+      payload = await res.json();
+    } catch {
+      // ignore
+    }
+    const code = payload?.error?.code ?? "E_HTTP";
+    const message = payload?.error?.message ?? `Request failed: ${res.status}`;
+    const err = new Error(message) as Error & { code?: string; status?: number };
+    err.code = code;
+    err.status = res.status;
+    throw err;
+  }
+
+  return (await res.json()) as T;
+}
+
+export function apiPost<T>(path: string, body?: unknown) {
+  return api<T>(path, {
+    method: "POST",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+export function apiPut<T>(path: string, body?: unknown) {
+  return api<T>(path, {
+    method: "PUT",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+export function apiPatch<T>(path: string, body?: unknown) {
+  return api<T>(path, {
+    method: "PATCH",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+export function apiDelete<T>(path: string) {
+  return api<T>(path, {
+    method: "DELETE",
+  });
+}
