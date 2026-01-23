@@ -4,6 +4,23 @@ Bu proje değişiklik günlüğü, **Keep a Changelog** formatını takip edecek
 
 ## [Unreleased]
 
+## [0.3.0-alpha.7] - 2026-01-23
+
+### Added
+- **Dedicated error log file:** Errors are now written not only to the `ErrorLog` table but also to a separate daily log file (`data/logs/error-YYYY-MM-DD.log`). Each entry records the timestamp, log level, error code, message and context, making it easier to trace issues without querying the database. This is implemented via a new Winston transport in `server/core/logger.ts`.
+
+### Changed
+- **Logger configuration:** The central logger now includes a second `DailyRotateFile` transport for errors. Logging output still goes to `app-YYYY-MM-DD.log` but errors are duplicated into the new error log with code and context.
+
+## [0.3.0-alpha.8] - 2026-01-23
+
+### Fixed
+- **Vite dev server 403 error:** Extended the Vite development server’s file-system allow list so that the top-level `index.html` can be served. Without this, navigating to `http://localhost:<port>/index.html` would produce a “403 Restricted” error because the file is outside of Vite's default allowlist. The configuration now allows serving the project root alongside `client/` and `shared/` directories.
+
+### Changed
+- **Package version:** Updated `package.json` version to `0.3.0-alpha.8`.
+
+
 ## [0.3.0-alpha.6] - 2026-01-23
 
 ### Added

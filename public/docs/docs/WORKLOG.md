@@ -113,3 +113,30 @@ Bu güncelleme kod içermemekle birlikte proje dokümantasyonunu portatif çalı
 - **DayZ server dizin yapısı belirlendi:** `PANEL_ARCHITECTURE_TR.md` dosyasında DayZServer klasörünün içeriği (serverDZ.cfg, mpmissions, keys, ServerProfiles) ve panelin bu yapıdan nasıl yararlandığı detaylandırıldı.
 - **Sürüm güncellemesi (alpha.6):** Bu dökümantasyon güncellemeleri nedeniyle sürüm numarası `0.3.0-alpha.6` olarak artırıldı; `CHANGELOG.md` ve `WORKLOG.md` dosyalarına yansıtıldı.
 
+### 2026-01-23 — Hata Kodu Loglama (alpha.7)
+
+Bu sprint, hata ayıklamayı kolaylaştırmak için uygulamanın log mekanizmasını geliştirdi.
+
+#### Tamamlananlar
+
+- **Ayrı hata log dosyası:** Uygulama hata kodları artık yalnızca `ErrorLog` tablosuna değil, aynı zamanda `data/logs/error-YYYY-MM-DD.log` dosyasına da kaydediliyor. Yeni Winston transport, hata seviyesindeki logları günlük olarak döndürerek her satıra zaman damgası, seviye, hata kodu, mesaj ve bağlam ekliyor. Böylece hata kaynaklarını doğrudan dosya sisteminden incelemek mümkün hale geliyor.
+- **Logger yapılandırması güncellendi:** `server/core/logger.ts` dosyasındaki logger, yeni `errorRotate` transport’unu içeriyor. Bu transport `error` seviyesindeki logları yeni dosyaya yazarken mevcut `app` dosyası tüm logları döndürmeye devam ediyor.
+- **Dokümantasyon ve sürüm:** `CHANGELOG.md` dosyasında 0.3.0‑alpha.7 sürümü altında bu iyileştirme açıklandı. `WORKLOG.md` bu kayıt ile güncellendi ve `package.json` sürümü `0.3.0-alpha.7` olarak güncellendi.
+
+#### Notlar
+
+- Bu değişiklik, çoklu instance yapısı ve portatif çalışma modeline ek olarak hata izleme kolaylığı sağlamayı amaçlar. Artık hata kodlarını görmek için veritabanı sorgulamak gerekmez; günlük dosyaları doğrudan incelemek yeterlidir.
+
+### 2026-01-23 — Dev Server Konfigürasyonu (alpha.8)
+
+Bu güncelleme, geliştirme ortamında `/index.html` açılırken yaşanan “403 Restricted” hatasını çözdü.
+
+#### Tamamlananlar
+
+- **Vite fs allow list genişletildi:** `vite.config.client.ts` içerisine `server.fs.allow` eklendi ve proje kökü (`.`) de izinli dizinler listesine dahil edildi. Bu, dev sunucuda bulunan `index.html` dosyasına doğrudan erişimi mümkün kılarak 403 hatasını engeller. Ayrıca `client/` ve `shared/` dizinleri için var olan izinler korunmuştur.
+- **Sürüm güncellemesi (alpha.8):** Bu düzeltme nedeniyle `package.json` sürümü `0.3.0-alpha.8` olarak artırıldı ve `CHANGELOG.md` ile `WORKLOG.md` güncellendi.
+
+#### Notlar
+
+- Bu düzenleme yalnızca geliştirme (dev) modunu etkiler; üretim (`npm run build` ve `npm run start`) süreçleri değişmemiştir.
+

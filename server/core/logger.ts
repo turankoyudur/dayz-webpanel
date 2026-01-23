@@ -52,6 +52,30 @@ export function getLogger() {
     format: fileLineFormat,
   });
 
+  // Dedicated error log file. This transport will capture only "error" level logs
+  // and include the error code alongside the message. Having a separate error log
+  // makes it easy to find the root cause of issues without digging into the main
+  // application logs. Each entry includes the timestamp, log level, error code,
+  // message and context (if provided).
+  const errorRotate = new (winston.transports as any).DailyRotateFile({
+    dirname: logsDir,
+    filename: "error-%DATE%.log",
+    datePattern: "YYYY-MM-DD",
+    maxFiles: "14d",
+    zippedArchive: true,
+    level: "error",
+    format: winston.format.combine(
+      winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
+      winston.format.errors({ stack: true }),
+      winston.format.printf((info) => {
+        const code = info.code ? String(info.code) : "";
+        const msg = typeof info.message === "string" ? info.message : JSON.stringify(info.message);
+        const ctx = info.context ? ` context=${safeJson(info.context)}` : "";
+        return `${info.timestamp} [${info.level}] ${code} ${msg}${ctx}`;
+      }),
+    ),
+  });
+
   const logger = winston.createLogger({
     level: "info",
     // Console stays human readable.
@@ -69,6 +93,7 @@ export function getLogger() {
         ),
       }),
       rotate,
+      errorRotate,
     ],
   });
 

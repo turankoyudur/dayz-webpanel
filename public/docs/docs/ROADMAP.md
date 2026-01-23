@@ -52,6 +52,10 @@ Bu sprint, tüm modüllerin (settings/server/mods/config/log) **instance bağlam
 - [x] Doküman indeksleme: `docs/INDEX.md` + `docs/WORKLOG.md` güncelliği
 - [x] Typecheck çıktısının temizlenmesi: `pnpm run typecheck`
 
+### P0 — Güncellemeler (tamamlandı)
+
+- [x] Hata kodu loglama geliştirmesi: Uygulama artık yalnızca `ErrorLog` tablosuna değil ayrıca `data/logs/error-YYYY-MM-DD.log` dosyasına hata kodu ve bağlamını yazıyor. Böylece hata ayıklama için DB sorgusu yapmaya gerek kalmıyor. Bu, logger konfigürasyonuna yeni bir günlük rota eklenerek sağlandı.
+
 ---
 
 ## P1 — Kurulum sihirbazı (v2) + güvenli çalışma alanı

@@ -137,3 +137,12 @@ Kontroller:
 
 ### D) Ayar yollarını güncellemek
 UI üzerindeki Settings sayfasından yolları girip kaydedin.
+
+## 9) Hata logları
+
+Panel, oluşan hataları iki şekilde kaydeder:
+
+- **Veritabanı `ErrorLog` tablosu:** Kapsamlı hata kodu, mesaj ve yığın izlerini saklar. API üzerinden veya DB aracıyla sorgulanabilir.
+- **`data/logs/error-YYYY-MM-DD.log` dosyası:** Yalnızca `error` seviyesindeki logları içerir ve her satırda zaman damgası, seviye, hata kodu, mesaj ve bağlamı barındırır. Hata ayıklarken DB sorgusu yapmanıza gerek kalmadan bu dosyayı inceleyebilirsiniz.
+
+Ana günlük dosyası `data/logs/app-YYYY-MM-DD.log` tüm seviyelerdeki logları içerirken, `error` log dosyası yalnızca hatalar için ayrılmıştır.
