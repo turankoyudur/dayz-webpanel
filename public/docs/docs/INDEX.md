@@ -13,6 +13,7 @@ Bu klasördeki dokümanlara hızlı erişim için.
 - **Build-doc sync**: `../scripts/docs-sync.mjs` (build öncesi dokümanları `public/docs/` altına taşır)
 - **Plan taslakları**: `PLAN.md`
 - **ChatGPT Context (kısa)**: `CHATGPT_CONTEXT_TR.md`
+- **Yeni sohbet prompt'u (tek mesaj)**: `NEW_CHAT_PROMPT_TR.md`
 - **ChatGPT Project talimatları**: `CHATGPT_PROJECT_INSTRUCTIONS_TR.md`
 - **README (TR)**: `README_TR.md`
 

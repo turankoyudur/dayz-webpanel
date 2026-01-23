@@ -301,14 +301,15 @@ export class ServerControlService {
     const instanceCfg = path.join(getInstanceFolders(s.dataRoot, this.instanceId).configs, s.serverConfigFile);
     const serverCfg = fs.existsSync(instanceCfg) ? instanceCfg : path.join(s.dayzServerPath, s.serverConfigFile);
 
-    // Build -mod param (enabled mods -> junction folders under DayZ server dir)
-    // For multi-instance support, use InstanceMod rows to determine which mods are enabled and their order.
-    const instanceMods = await this.db.instanceMod.findMany({
+    // Build -mod param (enabled mods per-instance -> junction folders under DayZ server dir)
+    // InstanceMod stores per-instance enable and ordering.  We eagerly load the
+    // associated Mod rows and sort by sortOrder.  Only enabled mods are included.
+    const enabledRows = await this.db.instanceMod.findMany({
       where: { instanceId: this.instanceId, enabled: true },
       include: { mod: true },
       orderBy: { sortOrder: "asc" },
     });
-    const enabledMods = instanceMods.map((im) => im.mod);
+    const enabledMods = enabledRows.map((row) => row.mod);
     await ensureJunctionsForMods({ dayzServerPath: s.dayzServerPath, mods: enabledMods });
 
     const modArg = enabledMods.length

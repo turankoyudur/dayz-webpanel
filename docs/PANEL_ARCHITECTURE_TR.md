@@ -24,11 +24,15 @@ Bu sayede SPA build çıktısında dokümanlar her zaman güncel kalır.
 ### DayZ runtime kökü (`Settings.dataRoot`)
 Varsayılan: proje kökündeki `data/`.
 
-Panelin DayZ/SteamCMD ile ilgili dosyaları bu kökün altında tutulur:
-- `.../steamcmd/` → SteamCMD kurulum dizini
-- `.../steamcmd/steamapps/common/DayZServer/` → DayZ Dedicated Server (varsayılan)
-- `.../instances/<instanceName>/profiles/` → Profiles (RPT vb.)
-- `.../instances/<instanceName>/runtime/` → Instance runtime (ileride genişletilecek)
+Panelin DayZ ve SteamCMD ile ilgili tüm dosyaları bu kökün altında tutulur:
+    - `steamcmd/` → SteamCMD kurulum dizini (`steamcmd.exe` veya `steamcmd.sh`).
+    - `steamcmd/steamapps/common/DayZServer/` → DayZ Dedicated Server kurulumu.  SteamCMD appid **223350** ile indirilen sunucu bu klasörün içine kurulur ve aşağıdaki standart DayZ dizin yapısını barındırır:
+        - `serverDZ.cfg` — ana sunucu yapılandırma dosyası.
+        - `mpmissions/` — resmi ve özel görev dosyalarının bulunduğu klasör.
+        - `keys/` — mod ve sunucu anahtarlarının (.bikey) saklandığı klasör.
+        - `ServerProfiles/` veya `profiles/` — DayZ'nin varsayılan profiller klasörü.  Panel, her instance için profilleri `<dataRoot>/instances/<instanceName>/profiles` altında tutar.
+    - `instances/<instanceName>/profiles/` → Panelin instance‑başına profillerini ve RPT loglarını sakladığı dizin. Bu dizin, DayZ Server'ın `ServerProfiles` klasörüne denk gelir.
+    - `instances/<instanceName>/runtime/` → Instance runtime dosyaları (PID ve process state gibi bilgiler için ayrılan klasör; ileride genişletilebilir).
 
 ## 3) Başlıca modüller (Backend)
 

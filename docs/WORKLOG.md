@@ -90,19 +90,26 @@ Bu dosya, yapılan değişiklikleri tarih sırasıyla **net ve anlaşılır** ş
 
 ## 2026-01-23
 ### Tamamlananlar
-- **Build kontrolü iyileştirildi:** `scripts/windows/start.bat` ve `scripts/linux/start.sh` betikleri, artık hem sunucu derlemesinin (`dist/server/node-build.mjs`) hem de istemci derlemesinin (`dist/spa/index.html`) varlığını kontrol ediyor. Önceden yalnızca sunucu derlemesi kontrol edildiğinden, istemci klasörü eksik olduğunda panel `/setup` gibi sayfalarda boş bir ekran veriyordu.  Artık her iki dosya da yoksa `npm run build` çağrılarak tam derleme tetikleniyor.
- - **Sürüm güncellemesi:** `package.json` sürümü `0.3.0-alpha.4` olarak artırıldı. `CHANGELOG.md` ve `WORKLOG.md` güncellendi.
+ - **Build kontrolü iyileştirildi:** `scripts/windows/start.bat` ve `scripts/linux/start.sh` betikleri, artık hem sunucu derlemesinin (`dist/server/node-build.mjs`) hem de istemci derlemesinin (`dist/spa/index.html`) varlığını kontrol ediyor. Önceden yalnızca sunucu derlemesi kontrol edildiğinden, istemci klasörü eksik olduğunda panel `/setup` gibi sayfalarda boş bir ekran veriyordu.  Artık her iki dosya da yoksa `npm run build` çağrılarak tam derleme tetikleniyor.
+ - **Sürüm güncellemesi (alpha.4):** `package.json` sürümü `0.3.0-alpha.4` olarak artırıldı. `CHANGELOG.md` ve `WORKLOG.md` güncellendi.
 
-## 2026-01-23
+### 2026-01-23 — Per‑instance Mod Sıralama (alpha.5)
 
-### Tamamlananlar
+Bu sprint, mod yönetiminde kalan eksiklikleri tamamladı ve multi‑instance mimarinin işlevsel hale gelmesini sağladı.
 
- - **Per‑instance mod sıralama UI:** Mods sayfasındaki indirilen modlar listesi artık per‑instance `sortOrder` değerine göre sıralanıyor ve her mod için “↑ / ↓” butonları ile konumları değiştirilebiliyor. Sıralama değişiklikleri backend’e gönderiliyor ve kalıcı hale geliyor. Bu sayede `-mod=` parametresi, UI’da görülen sırayla oluşuyor.
- - **Backend InstanceMod entegrasyonu:** `mods` API’si per‑instance `enabled` ve `sortOrder` alanlarını `InstanceMod` tablosundan türeterek döndürüyor; `PATCH /mods/enable` artık global `Mod.enabled` yerine `InstanceMod` tablosunu güncelliyor; yeni `PATCH /mods/order` endpoint’i mod sıralamasını güncellemeye izin veriyor. Mod ekleme (`/mods/add`) sırasında, ilgili instance için `InstanceMod` kaydı yoksa oluşturuluyor ve sıranın sonuna ekleniyor.
- - **Server mod parametreleri:** Server start işlemi, `-mod=` parametresini per‑instance olarak etkin modların sırasına göre oluşturuyor. Global `Mod.enabled` alanı artık `-mod` listesini etkilemiyor.
- - **Sürüm güncellemesi:** `package.json` sürümü `0.3.0-alpha.5` olarak artırıldı. `CHANGELOG.md` ve `ROADMAP.md` güncellendi; multi‑instance roadmap’inde “Mod sıralama” maddesi tamamlandı olarak işaretlendi.
+#### Tamamlananlar
 
-### Notlar
+- **Per‑instance mod sıralama UI:** Mods sayfasına ↑/↓ butonları eklendi ve mod listesi `sortOrder` ve `enabled` alanlarına göre sıralanıyor.  Değişiklikler `PATCH /mods/order` üzerinden backend'e iletiliyor ve React Query cache'leri instance bazında invalid ediliyor.
+- **Backend InstanceMod desteği:**  `mods.service.ts` mod listesini `InstanceMod` üzerinden birleştirerek getiriyor; `setEnabled()` ve yeni `setOrder()` metodları, enable/disable ve sıra ayarlamalarını `InstanceMod` tablosuna yazıyor.  Server başlatma sürecinde `-mod=` parametresi seçili instance'ın etkin ve sıralanmış modlarından derleniyor.
+- **Sürüm güncellemesi (alpha.5):** Bu değişiklikler 0.3.0‑alpha.5 sürümüne dahil edildi; `CHANGELOG.md` ve `ROADMAP.md` güncellendi.
 
- Bu sürümle birlikte multi‑instance mimarisinin mod yönetimi tamamen per-instance hale gelmiştir. Kullanıcı artık her sunucu instance’ı için mod listesini bağımsız olarak düzenleyebilir ve modlar doğru sırada başlatılır. Drag‑drop yerine basit yukarı/aşağı butonları kullanılmıştır; ileride bir “drag & drop” komponenti eklemek roadmap’te opsiyonel bir geliştirme olarak duruyor.
+### 2026-01-23 — Taşınabilirlik ve Dökümantasyon (alpha.6)
+
+Bu güncelleme kod içermemekle birlikte proje dokümantasyonunu portatif çalışma üzerine netleştirdi.
+
+#### Tamamlananlar
+
+- **Varsayılan yollar yeniden yazıldı:** `README_TR.md` artık DataRoot altında portatif bir kurulumun nasıl çalıştığını açıklıyor ve platforma özgü hard‑coded örnekleri kaldırıyor.  `steamcmdPath`, `dayzServerPath`, `profilesPath` ve `apiBridgePath` değerlerinin DataRoot üzerinden nasıl türetildiği anlatıldı.
+- **DayZ server dizin yapısı belirlendi:** `PANEL_ARCHITECTURE_TR.md` dosyasında DayZServer klasörünün içeriği (serverDZ.cfg, mpmissions, keys, ServerProfiles) ve panelin bu yapıdan nasıl yararlandığı detaylandırıldı.
+- **Sürüm güncellemesi (alpha.6):** Bu dökümantasyon güncellemeleri nedeniyle sürüm numarası `0.3.0-alpha.6` olarak artırıldı; `CHANGELOG.md` ve `WORKLOG.md` dosyalarına yansıtıldı.
 

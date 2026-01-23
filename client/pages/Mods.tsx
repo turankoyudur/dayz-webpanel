@@ -15,7 +15,8 @@ type Mod = {
   installedPath: string | null;
   lastUpdateTs: number | null;
   sizeBytes: number | null;
-  // Optional per-instance sort order. Mods with lower sortOrder appear earlier.
+  // Per-instance sort order (0 = first).  Mods without instance-specific
+  // state default to 0.
   sortOrder?: number;
 };
 
@@ -51,17 +52,11 @@ export default function Mods() {
 
   const list = mods.data ?? [];
   const enabledCount = useMemo(() => list.filter((m) => m.enabled).length, [list]);
-  // Sort downloaded mods by sortOrder so the UI reflects the current ordering.
   const downloadedMods = useMemo(() => {
-    const modsWithPath = list.filter((m) => !!m.installedPath);
-    return modsWithPath
+    return list
+      .filter((m) => !!m.installedPath)
       .slice()
-      .sort((a, b) => {
-        const aOrder = a.sortOrder ?? 0;
-        const bOrder = b.sortOrder ?? 0;
-        if (aOrder !== bOrder) return aOrder - bOrder;
-        return (a.name ?? "").localeCompare(b.name ?? "");
-      });
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [list]);
   const catalogMods = useMemo(() => list.filter((m) => !m.installedPath), [list]);
 
@@ -135,33 +130,6 @@ export default function Mods() {
       });
     },
   });
-
-  // Update the order of mods for this instance.
-  const setOrder = useMutation({
-    mutationFn: (order: string[]) => apiPatch<any>("/mods/order", { order }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
-    },
-    onError: (e: any) => toast({ title: "Reorder failed", description: `${e.code ?? ""} ${e.message}` }),
-  });
-
-  // Helpers to move a mod up or down in the list. They compute the new order of workshopIds
-  // based on the current sorted downloadedMods array.
-  const moveUp = (index: number) => {
-    const order = downloadedMods.map((m) => m.workshopId);
-    if (index <= 0) return;
-    const newOrder = [...order];
-    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-    setOrder.mutate(newOrder);
-  };
-
-  const moveDown = (index: number) => {
-    const order = downloadedMods.map((m) => m.workshopId);
-    if (index >= order.length - 1) return;
-    const newOrder = [...order];
-    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-    setOrder.mutate(newOrder);
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -292,7 +260,7 @@ export default function Mods() {
             </div>
           ) : null}
 
-          {downloadedMods.map((m, idx) => (
+          {downloadedMods.map((m) => (
             <div key={m.workshopId} className="border rounded-md p-3">
               <div className="flex flex-col md:flex-row md:items-center gap-2">
                 <div className="flex-1">
@@ -319,26 +287,6 @@ export default function Mods() {
                     disabled={install.isPending}
                   >
                     Update
-                  </Button>
-
-                  {/* Reorder buttons */}
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => moveUp(idx)}
-                    disabled={setOrder.isPending || idx === 0}
-                    title="Move up"
-                  >
-                    ↑
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => moveDown(idx)}
-                    disabled={setOrder.isPending || idx === downloadedMods.length - 1}
-                    title="Move down"
-                  >
-                    ↓
                   </Button>
                 </div>
               </div>

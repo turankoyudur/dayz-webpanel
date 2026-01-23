@@ -4,18 +4,29 @@ Bu proje değişiklik günlüğü, **Keep a Changelog** formatını takip edecek
 
 ## [Unreleased]
 
+## [0.3.0-alpha.6] - 2026-01-23
+
+### Added
+- **Taşınabilirlik dökümantasyonu:**  `README_TR.md` ve `PANEL_ARCHITECTURE_TR.md` güncellenerek portatif çalışma modelinin nasıl çalıştığı açıklandı.  `dataRoot` altındaki standart klasör yapısı ve DayZ server klasörünün (serverDZ.cfg, mpmissions, keys, ServerProfiles) panel tarafından nasıl kullanıldığı ayrıntılandırıldı.
+
+### Changed
+- **Varsayılan yollar:**  Platforma özel hard‑coded varsayılanlar kaldırıldı.  Varsayılan yol tanımları DataRoot üzerinden türetilen managed path'lerle açıklandı.
+
+### Notes
+- Bu sürüm kod değişikliği içermemektedir; yalnızca dökümantasyon ve sürüm artırımını içerir.
+
 ## [0.3.0-alpha.5] - 2026-01-23
 
 ### Added
- - **Per-instance mod ordering:** Mods on the Downloaded Mods list can now be reordered using Up/Down buttons.  The new order is persisted per instance via the backend and determines the order of the `-mod=` launch argument.  The list is sorted by this order whenever it is fetched.
- - **Backend support for InstanceMod:** The API now derives `enabled` and `sortOrder` from the `InstanceMod` table.  The `/mods` endpoint returns per‑instance enabled flags and sort orders; `PATCH /mods/order` updates the ordering; `PATCH /mods/enable` now writes to `InstanceMod` instead of the global flag.
+- **Per‑instance mod sıralama ve etkinleştirme UI:** Mods sayfasında modlar artık `InstanceMod.sortOrder` alanına göre sıralanıyor ve her mod için ↑/↓ butonları ile sıralama değiştirilebiliyor.  Sıra değişiklikleri `PATCH /mods/order` endpoint'ine gönderiliyor ve backend `ModsService.setOrder()` ile veritabanında güncelleniyor.
+- **InstanceMod entegrasyonu:**  Backend'de `mods.service.ts` artık mod listesini `InstanceMod` tabloları üzerinden döndürüyor; enable/disable ve sortOrder ayarları bu tabloya yazılıyor.  Yeni `setOrder()` metodu ile mod sıralaması ayarlanabiliyor.  Server başlatılırken `-mod=` parametresi seçili instance'ın etkin ve sıralanmış modlarından oluşturuluyor.
 
 ### Changed
- - **Server start uses per-instance mods:** The DayZ server launch command now builds its `-mod=` argument from enabled instance mods sorted by `sortOrder`.  Global `Mod.enabled` is ignored in favour of `InstanceMod`.
- - **Mod listing sorted by sortOrder:** The UI sorts downloaded mods by the per-instance `sortOrder` so that the display matches the order used at launch.
+- **Launch arg üretimi:**  `server-control` servisi, global `Mod.enabled` yerine `InstanceMod` kayıtlarını kullanarak `-mod=` argümanını derliyor.
+- **Mods listesi sıralaması:**  Modlar artık varsayılan olarak etkin modlar önde olacak şekilde `enabled` ve `sortOrder`'a göre sıralanıyor; isim fallback olarak kullanılıyor.
 
-### Fixed
- - None.
+### Notes
+- Bu sürüm, multi‑instance dönüşümünün bir parçası olarak mod yönetimindeki son büyük eksikliği kapatmıştır.  UI’da sıralama kontrolleri eklenmiş ve backend buna uygun hale getirilmiştir.
 
 ## [0.3.0-alpha.4] - 2026-01-23
 

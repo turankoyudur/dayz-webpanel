@@ -78,7 +78,7 @@ Not: Temel mod arama + koleksiyon import + enable/disable akışı mevcut.
 - [x] Workshop arama (QueryFiles) + fallback search
 - [x] Collection import
 - [ ] İndirme kuyruğu (concurrency / retry / progress)
-- [x] Mod sıralama (per‑instance ordering via up/down UI; preset TBD)
+- [ ] Mod sıralama (drag-drop) + preset
 - [ ] Güncelleme kontrolü (yalnızca indirilen modlar)
 
 ---

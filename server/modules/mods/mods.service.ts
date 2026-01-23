@@ -49,14 +49,13 @@ export class ModsService {
   }
 
   /**
-   * Lists mods from the DB scoped to the current instance.
+   * Lists mods for the current instance.
    *
-   * For multi‑instance support, each mod has a global row in the `Mod` table and
-   * optional per‑instance configuration in `InstanceMod` (enabled flag and sort order).
-   * When listing mods we join the `InstanceMod` table for the current instance
-   * and derive `enabled`/`sortOrder` from there when available. Fallbacks:
-   * - If no InstanceMod row exists, the global `Mod.enabled` is used and sortOrder defaults to 0.
-   * - Mods are sorted: enabled mods first, then by sortOrder ascending, then by name.
+   * The global Mod table stores metadata about each mod (name, folderName, etc.).
+   * Per‑instance enable/disable and ordering are stored in InstanceMod rows.  When
+   * listing mods we join the InstanceMod table for this.instanceId to include
+   * per‑instance flags.  Mods that have not yet been added to InstanceMod for
+   * this instance will be returned with enabled=false and sortOrder=0.
    */
   async list() {
     const mods = await this.db.mod.findMany({
@@ -67,38 +66,31 @@ export class ModsService {
         },
       },
     });
-    // Map per-instance data
-    const withInstance = mods.map((m) => {
-      const inst = m.instances[0];
+    return mods.map((m) => {
+      const inst = m.instances[0] as any;
+      // Remove the included instances array to keep response clean
+      const { instances, ...rest } = m as any;
       return {
-        workshopId: m.workshopId,
-        name: m.name,
-        folderName: m.folderName,
-        description: m.description,
-        installedPath: m.installedPath,
-        lastUpdateTs: m.lastUpdateTs,
-        sizeBytes: m.sizeBytes,
-        enabled: inst ? inst.enabled : m.enabled,
-        sortOrder: inst ? inst.sortOrder : 0,
+        ...rest,
+        enabled: inst?.enabled ?? false,
+        sortOrder: inst?.sortOrder ?? 0,
       };
-    });
-    // Sort: enabled first, then sortOrder, then name
-    withInstance.sort((a, b) => {
+    }).sort((a, b) => {
+      // Enabled mods come first; then sortOrder ascending; fallback by name
       if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
-      if (a.sortOrder !== b.sortOrder) return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
-      return (a.name ?? "").localeCompare(b.name ?? "");
+      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+      return String(a.name ?? a.workshopId).localeCompare(String(b.name ?? b.workshopId));
     });
-    return withInstance;
   }
 
   /**
-   * Adds a workshop ID to the catalog and ensures an InstanceMod row exists.
+   * Adds a workshop ID to the catalog.
    *
-   * This does NOT install it yet (install is a separate action). On the first
-   * add per instance the mod is appended to the end of the sort order.
+   * This does NOT install it yet (install is a separate action).
    */
   async add(workshopId: string) {
     const meta = await fetchWorkshopDetails(workshopId);
+    // Upsert into global Mod table
     const mod = await this.db.mod.upsert({
       where: { workshopId },
       create: {
@@ -108,6 +100,7 @@ export class ModsService {
         description: meta?.description,
         sizeBytes: meta?.sizeBytes,
         lastUpdateTs: meta?.lastUpdateTs,
+        // Global enabled flag remains unused in v0.3+; default to false
         enabled: false,
       },
       update: {
@@ -118,16 +111,19 @@ export class ModsService {
         lastUpdateTs: meta?.lastUpdateTs,
       },
     });
-    // Ensure an InstanceMod entry exists for this instance; if not, append at the end
-    const existing = await this.db.instanceMod.findFirst({ where: { instanceId: this.instanceId, modId: mod.id } });
-    if (!existing) {
-      const maxOrder = await this.db.instanceMod.aggregate({
-        where: { instanceId: this.instanceId },
-        _max: { sortOrder: true },
-      });
-      const nextOrder = (maxOrder._max.sortOrder ?? -1) + 1;
-      await this.db.instanceMod.create({ data: { instanceId: this.instanceId, modId: mod.id, enabled: false, sortOrder: nextOrder } });
-    }
+
+    // Ensure an InstanceMod row exists for this instance.  If there are existing
+    // rows, we append new mods to the end of the sort order.
+    const max = await this.db.instanceMod.aggregate({
+      where: { instanceId: this.instanceId },
+      _max: { sortOrder: true },
+    });
+    const nextOrder = (max._max.sortOrder ?? 0) + 1;
+    await this.db.instanceMod.upsert({
+      where: { instanceId_modId: { instanceId: this.instanceId, modId: mod.id } },
+      create: { instanceId: this.instanceId, modId: mod.id, enabled: false, sortOrder: nextOrder },
+      update: {},
+    });
     return mod;
   }
 
@@ -202,60 +198,60 @@ export class ModsService {
       update: { installedPath },
     });
 
+    // Ensure InstanceMod row exists (it may have been created by add(), but fallback)
+    const mod = await this.db.mod.findUnique({ where: { workshopId } });
+    if (mod) {
+      await this.db.instanceMod.upsert({
+        where: { instanceId_modId: { instanceId: this.instanceId, modId: mod.id } },
+        create: { instanceId: this.instanceId, modId: mod.id, enabled: false, sortOrder: 0 },
+        update: {},
+      });
+    }
+
     return { ok: true, installedPath, output: result.stdout };
   }
 
   /**
-   * Enables/disables a mod for the current instance.
-   * This only affects launch arguments; it does not delete files.
+   * Enables or disables a mod for the current instance.
+   *
+   * We upsert into the InstanceMod table to track the per‑instance flag.  The
+   * global Mod.enabled flag is no longer used for launch arguments in v0.3+.
    */
   async setEnabled(workshopId: string, enabled: boolean) {
-    const mod = await this.db.mod.findUnique({ where: { workshopId }, select: { id: true, enabled: true } });
-    if (!mod) throw new AppError({ code: ErrorCodes.NOT_FOUND, status: 404, message: `Mod ${workshopId} not found` });
-    // Upsert the InstanceMod row. If it doesn't exist, create with next sort order.
-    const existing = await this.db.instanceMod.findFirst({ where: { instanceId: this.instanceId, modId: mod.id } });
-    if (existing) {
-      await this.db.instanceMod.update({ where: { id: existing.id }, data: { enabled } });
-    } else {
-      const maxOrder = await this.db.instanceMod.aggregate({ where: { instanceId: this.instanceId }, _max: { sortOrder: true } });
-      const nextOrder = (maxOrder._max.sortOrder ?? -1) + 1;
-      await this.db.instanceMod.create({ data: { instanceId: this.instanceId, modId: mod.id, enabled, sortOrder: nextOrder } });
-    }
-    return { workshopId, enabled };
+    const mod = await this.db.mod.findUnique({ where: { workshopId } });
+    if (!mod) throw new AppError({ code: ErrorCodes.NOT_FOUND, status: 404, message: "Mod not found" });
+    return this.db.instanceMod.upsert({
+      where: { instanceId_modId: { instanceId: this.instanceId, modId: mod.id } },
+      create: { instanceId: this.instanceId, modId: mod.id, enabled, sortOrder: 0 },
+      update: { enabled },
+    });
   }
 
   /**
-   * Updates the sort order of mods for this instance. The input array should be
-   * the list of workshopIds in the desired order (top to bottom). Any mods
-   * not present in the array will retain their relative order after the provided
-   * list.
+   * Updates the sort order of mods for the current instance.
+   * Accepts an array of workshopIds in the desired order.  Mods not included
+   * remain at their existing sort order relative to each other but are appended
+   * after the provided list.
    */
   async setOrder(order: string[]) {
-    // Build a map from workshopId to position
-    const map = new Map<string, number>();
-    order.forEach((id, idx) => map.set(id, idx));
-    // Fetch all InstanceMod rows for this instance with their workshopIds
-    const ims = await this.db.instanceMod.findMany({
-      where: { instanceId: this.instanceId },
-      include: { mod: { select: { workshopId: true } } },
-      orderBy: { sortOrder: "asc" },
-    });
-    // Assign new sort orders: those specified come first in order provided; others follow
-    let nextOrder = 0;
-    // Process provided order
-    for (const workshopId of order) {
-      const im = ims.find((x) => x.mod.workshopId === workshopId);
-      if (im) {
-        await this.db.instanceMod.update({ where: { id: im.id }, data: { sortOrder: nextOrder } });
-        nextOrder++;
-      }
+    // Fetch all InstanceMod rows for current instance
+    const rows = await this.db.instanceMod.findMany({ where: { instanceId: this.instanceId }, include: { mod: true } });
+    // Build a lookup by workshopId
+    const map: Record<string, typeof rows[number]> = {};
+    for (const row of rows) map[row.mod.workshopId] = row;
+    // Assign new sortOrder values to provided ids
+    let counter = 0;
+    for (const wid of order) {
+      const row = map[wid];
+      if (!row) continue;
+      await this.db.instanceMod.update({ where: { id: row.id }, data: { sortOrder: counter++ } });
+      row.sortOrder = counter - 1;
+      delete map[wid];
     }
-    // Process remaining
-    for (const im of ims) {
-      if (!map.has(im.mod.workshopId)) {
-        await this.db.instanceMod.update({ where: { id: im.id }, data: { sortOrder: nextOrder } });
-        nextOrder++;
-      }
+    // For remaining mods (not in order list), preserve relative order but shift after provided list
+    const remaining = Object.values(map).sort((a, b) => a.sortOrder - b.sortOrder);
+    for (const row of remaining) {
+      await this.db.instanceMod.update({ where: { id: row.id }, data: { sortOrder: counter++ } });
     }
     return { ok: true };
   }

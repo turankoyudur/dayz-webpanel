@@ -16,6 +16,27 @@ Bu roadmap, **panel** tarafının hedeflerini ve öncelik sıralamasını içeri
 
 ---
 
+## P1 — Multi-instance (çoklu sunucu) temel dönüşüm (ÖNCELİK)
+Bu sprint, tüm modüllerin (settings/server/mods/config/log) **instance bağlamıyla** çalışması için omurga kurar.
+
+### Tamamlananlar
+- [x] Instance context middleware: `X-Instance-Id` → `req.instanceId`
+- [x] Instance registry API: `/api/instances` (list/create/set-active/archive)
+- [x] Instance klasör standardı: `instances/<id>/{profiles,runtime,keys,configs,logs}`
+- [x] Settings service instance-scoped (`instance:<id>` key)
+- [x] Server-control servis katmanı instanceId parametresi alır (runtime/log path’leri instance bazlı)
+
+### Sıradaki (bloklayıcılar)
+- [x] UI: Instance seçici (header dropdown) (Layout)
+- [x] UI: `/instances` sayfası (create/archive/set active + rename)
+ - [x] UI: seçimi localStorage’da tutma (opsiyonel; tek kullanıcı local panelde global active yeterli)
+ - [x] Client HTTP: her istekte `X-Instance-Id` header ekleme (seçili instance)
+ - [x] React Query cache key’leri instanceId ile ayrıştırma
+ - [x] Mods: enable/disable ve sıralama instance bazlı (`InstanceMod`) (mevcut global enabled → per-instance)
+ - [x] Port çakışması kontrolü (save sırasında benzersiz port zorlaması)
+
+---
+
 ## P0 — Stabilizasyon ve tutarlılık (hedef: sürekli çalışır v1)
 - [x] Settings şeması ↔ UI form alanları tutarlı (Steam Web API Key dahil)
 - [x] Portable çalışma için DataRoot + managed-path türetme (hard-coded drive yok)
@@ -23,6 +44,7 @@ Bu roadmap, **panel** tarafının hedeflerini ve öncelik sıralamasını içeri
 - [x] `doctor` çıktısı: “ne eksik, nasıl düzeltirim” formatında net
 - [x] Setup gate: `setupComplete=false` ise otomatik `/setup` yönlendirmesi
 - [x] Setup API v1: status + create-folders + (Windows) install-steamcmd + install-dayz + complete
+- [x] Start script client build kontrolü: `start.bat` ve `start.sh` betikleri hem sunucu hem istemci derlemelerinin varlığını kontrol eder; eksikse build yeniden yapılır (boş sayfa hatasını önler).
 
 ### P0 — Sıradaki (kısa vadeli)
 - [x] Release paketi scripti (node_modules hariç, data temiz): `scripts/windows/release-zip.ps1`, `scripts/linux/release-zip.sh`

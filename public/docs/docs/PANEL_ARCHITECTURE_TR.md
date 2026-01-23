@@ -24,13 +24,26 @@ Bu sayede SPA build çıktısında dokümanlar her zaman güncel kalır.
 ### DayZ runtime kökü (`Settings.dataRoot`)
 Varsayılan: proje kökündeki `data/`.
 
-Panelin DayZ/SteamCMD ile ilgili dosyaları bu kökün altında tutulur:
-- `.../steamcmd/` → SteamCMD kurulum dizini
-- `.../steamcmd/steamapps/common/DayZServer/` → DayZ Dedicated Server (varsayılan)
-- `.../instances/<instanceName>/profiles/` → Profiles (RPT vb.)
-- `.../instances/<instanceName>/runtime/` → Instance runtime (ileride genişletilecek)
+Panelin DayZ ve SteamCMD ile ilgili tüm dosyaları bu kökün altında tutulur:
+    - `steamcmd/` → SteamCMD kurulum dizini (`steamcmd.exe` veya `steamcmd.sh`).
+    - `steamcmd/steamapps/common/DayZServer/` → DayZ Dedicated Server kurulumu.  SteamCMD appid **223350** ile indirilen sunucu bu klasörün içine kurulur ve aşağıdaki standart DayZ dizin yapısını barındırır:
+        - `serverDZ.cfg` — ana sunucu yapılandırma dosyası.
+        - `mpmissions/` — resmi ve özel görev dosyalarının bulunduğu klasör.
+        - `keys/` — mod ve sunucu anahtarlarının (.bikey) saklandığı klasör.
+        - `ServerProfiles/` veya `profiles/` — DayZ'nin varsayılan profiller klasörü.  Panel, her instance için profilleri `<dataRoot>/instances/<instanceName>/profiles` altında tutar.
+    - `instances/<instanceName>/profiles/` → Panelin instance‑başına profillerini ve RPT loglarını sakladığı dizin. Bu dizin, DayZ Server'ın `ServerProfiles` klasörüne denk gelir.
+    - `instances/<instanceName>/runtime/` → Instance runtime dosyaları (PID ve process state gibi bilgiler için ayrılan klasör; ileride genişletilebilir).
 
 ## 3) Başlıca modüller (Backend)
+
+### 3.0 Instances (`server/modules/instances`) (Multi-instance omurga)
+**Amaç:** Çoklu sunucu (instance) yönetimi için registry ve disk klasör iskeleti.
+
+- `instances.routes.ts`: `/api/instances` (list/create/set-active/archive)
+- `instances.service.ts`: instance yaşam döngüsü + seed settings
+- `instanceFolders.ts`: `instances/<id>/{profiles,runtime,keys,configs,logs}` scaffold
+
+**Instance seçimi**: Her API çağrısı `X-Instance-Id` header ile instance bağlamını belirtir. Middleware: `server/middleware/instanceContext.ts`.
 
 ### 3.1 Settings (`server/modules/settings`)
 **Amaç:** Panelin tüm ayarlarını DB'de saklamak ve diğer modüllere tek yerden dağıtmak.
@@ -130,6 +143,7 @@ Not: allowlist varsayılan olarak `Panel Root` + `Data Root` ile sınırlıdır.
 - Routing: `client/App.tsx`
 - Setup gate: `client/components/SetupGuard.tsx` (setupComplete=false ise `/setup`, ancak path düzeltmek için `/settings` erişimi serbest)
 - Sayfalar:
+  - `client/pages/Instances.tsx` (instance create/rename/set-active/archive)
   - `client/pages/Setup.tsx`
   - `client/pages/Settings.tsx` (Settings kartları `client/components/settings/*`)
   - `client/pages/Server.tsx`, `Console.tsx`, `Mods.tsx`, `Logs.tsx`, `Configs.tsx`, `ApiBridge.tsx`

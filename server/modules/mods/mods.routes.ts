@@ -46,18 +46,6 @@ modsRouter.patch("/enable", async (req, res) => {
   res.json(await svc(req).setEnabled(parsed.data.workshopId, parsed.data.enabled));
 });
 
-// Update mod order for the current instance. Accepts an array of workshopIds in the desired
-// order (top to bottom). Missing mods retain their relative ordering after the provided list.
-modsRouter.patch("/order", async (req, res) => {
-  const schema = z.object({ order: z.array(z.string().regex(/^\d+$/)).optional() });
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) {
-    throw new AppError({ code: ErrorCodes.VALIDATION, status: 400, message: "Invalid payload" });
-  }
-  const order = parsed.data.order ?? [];
-  res.json(await svc(req).setOrder(order));
-});
-
 modsRouter.get("/scan", async (req, res) => {
   res.json(await svc(req).scanInstalledOnDisk());
 });
@@ -87,6 +75,16 @@ modsRouter.post("/collection", async (req, res) => {
 
 modsRouter.post("/refresh", async (req, res) => {
   res.json(await svc(req).refreshMetadata());
+});
+
+// Update the sort order of mods.  Expects JSON: { order: [workshopId1, workshopId2, ...] }
+modsRouter.patch("/order", async (req, res) => {
+  const body = (req.body ?? {}) as { order?: unknown };
+  if (!Array.isArray(body.order) || body.order.some((id) => typeof id !== "string")) {
+    throw new AppError({ code: ErrorCodes.VALIDATION, status: 400, message: "order must be an array of workshop ids" });
+  }
+  const order = body.order as string[];
+  res.json(await svc(req).setOrder(order));
 });
 
 modsRouter.post("/keys/sync", async (req, res) => {

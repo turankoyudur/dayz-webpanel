@@ -7,6 +7,14 @@ Bu repo: **DayZ Web Panel** (Node.js + Express + React/Vite). Amaç: DayZ Dedica
 - **ApiBridge:** Ayrı geliştiriliyor. Bu repoda modül korunur, ancak geliştirme önceliği değildir.
 - **Planlı restart / scheduler:** Panelde uygulanmaz; ApiBridge wrapper/scheduler sağlar. Panel yalnızca koordinasyon hook'ları sunar.
 
+## Multi-instance (çoklu sunucu) — WIP notu
+- Backend instance bağlamı aktiftir: `X-Instance-Id` header → `req.instanceId` (middleware: `server/middleware/instanceContext.ts`).
+- Instance registry endpoint'leri: `GET/POST/PATCH/DELETE /api/instances`.
+- UI tarafında temel instance yönetimi hazır:
+  - Header instance seçici: `client/components/InstanceSelector.tsx` (Layout'a bağlı)
+  - Yönetim sayfası: `client/pages/Instances.tsx` (`/instances`)
+  - Not: Local panel tek kullanıcı varsayımıyla, aktif instance DB'de tutulur. `X-Instance-Id` header tabanlı seçim opsiyoneldir (roadmap).
+
 ## Başlangıç için en önemli dokümanlar
 - Mimari harita (dosya/fonksiyon): `docs/PANEL_ARCHITECTURE_TR.md`
 - Roadmap: `docs/ROADMAP.md`
@@ -28,6 +36,12 @@ Bu repo: **DayZ Web Panel** (Node.js + Express + React/Vite). Amaç: DayZ Dedica
  - Varsayılan ZIP adı: `dayz-web-panel-panel-only-v<version>-<timestamp>.zip`
 
 ## En sık kullanılan endpoint'ler
+### Instance registry
+- `GET /api/instances` (list + activeId)
+- `POST /api/instances` (localhost-only)
+- `PATCH /api/instances/:id/active` (localhost-only)
+- `DELETE /api/instances/:id` (localhost-only)
+
 - Settings: `GET/PUT /api/settings`
 - Health: `GET /api/settings/health`
 - Setup (v2 jobs):

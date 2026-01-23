@@ -4,6 +4,79 @@ Bu proje değişiklik günlüğü, **Keep a Changelog** formatını takip edecek
 
 ## [Unreleased]
 
+## [0.3.0-alpha.6] - 2026-01-23
+
+### Added
+- **Taşınabilirlik dökümantasyonu:**  `README_TR.md` ve `PANEL_ARCHITECTURE_TR.md` güncellenerek portatif çalışma modelinin nasıl çalıştığı açıklandı.  `dataRoot` altındaki standart klasör yapısı ve DayZ server klasörünün (serverDZ.cfg, mpmissions, keys, ServerProfiles) panel tarafından nasıl kullanıldığı ayrıntılandırıldı.
+
+### Changed
+- **Varsayılan yollar:**  Platforma özel hard‑coded varsayılanlar kaldırıldı.  Varsayılan yol tanımları DataRoot üzerinden türetilen managed path'lerle açıklandı.
+
+### Notes
+- Bu sürüm kod değişikliği içermemektedir; yalnızca dökümantasyon ve sürüm artırımını içerir.
+
+## [0.3.0-alpha.5] - 2026-01-23
+
+### Added
+- **Per‑instance mod sıralama ve etkinleştirme UI:** Mods sayfasında modlar artık `InstanceMod.sortOrder` alanına göre sıralanıyor ve her mod için ↑/↓ butonları ile sıralama değiştirilebiliyor.  Sıra değişiklikleri `PATCH /mods/order` endpoint'ine gönderiliyor ve backend `ModsService.setOrder()` ile veritabanında güncelleniyor.
+- **InstanceMod entegrasyonu:**  Backend'de `mods.service.ts` artık mod listesini `InstanceMod` tabloları üzerinden döndürüyor; enable/disable ve sortOrder ayarları bu tabloya yazılıyor.  Yeni `setOrder()` metodu ile mod sıralaması ayarlanabiliyor.  Server başlatılırken `-mod=` parametresi seçili instance'ın etkin ve sıralanmış modlarından oluşturuluyor.
+
+### Changed
+- **Launch arg üretimi:**  `server-control` servisi, global `Mod.enabled` yerine `InstanceMod` kayıtlarını kullanarak `-mod=` argümanını derliyor.
+- **Mods listesi sıralaması:**  Modlar artık varsayılan olarak etkin modlar önde olacak şekilde `enabled` ve `sortOrder`'a göre sıralanıyor; isim fallback olarak kullanılıyor.
+
+### Notes
+- Bu sürüm, multi‑instance dönüşümünün bir parçası olarak mod yönetimindeki son büyük eksikliği kapatmıştır.  UI’da sıralama kontrolleri eklenmiş ve backend buna uygun hale getirilmiştir.
+
+## [0.3.0-alpha.4] - 2026-01-23
+
+### Fixed
+ - **Build script checks both server and client outputs**: Previously the start scripts (`scripts/windows/start.bat` and `scripts/linux/start.sh`) only looked for the server build at `dist/server/node-build.mjs` to decide whether to run a build.  If the client build (`dist/spa/index.html`) was missing — for example after cleaning up `dist/spa` — the server would still start and serve a blank page at `/setup`.  The scripts now verify that both `dist/server/node-build.mjs` **and** `dist/spa/index.html` exist before skipping the build, ensuring the panel UI is always available.
+
+
+## [0.3.0-alpha.3] - 2026-01-23
+
+### Added
+ - **Persistent instance selection:** the chosen instance in the header dropdown is now saved to `localStorage` (`dz.instanceId`), so the selection survives page reloads.
+ - **HTTP instance header:** the client `api()` wrapper reads the current instance id from `localStorage` and automatically includes an `X-Instance-Id` header on every request. If no instance is selected, the server uses its active default.
+ - **Per-instance query caches:** all React Query `queryKey` arrays now include the current `instanceId` as a prefix, isolating caches between instances.
+ - **Per-instance mod management:** enabling/disabling mods and determining launch order now operate on `InstanceMod` records. The server start command builds the `-mod=` argument from the enabled mods of the selected instance.
+ - **Port conflict validation:** when saving settings, the backend validates that `serverPort` is unique across instances and returns a `400 VALIDATION` error if a conflict is detected.
+
+### Changed
+ - **Instance selection UI:** instance changes persist to `localStorage` and automatically reload to prevent cross-instance cache confusion.
+ - **Cache invalidation:** all invalidations in the frontend now include `instanceId` in their `queryKey`, ensuring only the relevant instance’s caches are cleared.
+ - **Documentation updates:** the roadmap items for multi‑instance blockers are marked as complete, and the worklog reflects these changes.
+
+## [0.3.0-alpha.2] - 2026-01-22
+
+### Added
+- UI: Instance yönetimi sayfası: `/instances` (create / rename / set active / archive).
+- UI: Header instance seçici entegre edildi (Layout). Yeni instance oluşturma sonrası otomatik reload ile cache karışması engellenir.
+
+### Changed
+- SetupGuard: ilk kurulum tamamlanmamışken `/instances` sayfasına erişim whitelist'e alındı.
+- Sidebar: "Instances" menü girdisi eklendi.
+
+## [0.3.0-alpha.1] - 2026-01-22
+
+> Not: Bu sürüm **tamamlanmamış** bir "handoff" paketidir. Multi-instance dönüşümü başlatıldı; UI ve bazı akışlar bir sonraki sprintte tamamlanacaktır.
+
+### Added
+- Multi-instance altyapısı (başlangıç):
+  - Request instance context: `X-Instance-Id` header → `req.instanceId`
+  - Instance registry modülü: `/api/instances` (list/create/set-active/archive)
+  - Instance klasör iskeleti: `instances/<id>/{profiles,runtime,keys,configs,logs}`
+- Server-control katmanında instanceId parametresi ile çalışma (service constructor ve runtime/log path’leri instance bazlı).
+- Handoff dosyası: `docs/NEW_CHAT_PROMPT_TR.md` (yeni sohbet için tek-prompt bağlam).
+
+### Changed
+- Settings service artık instance-scoped çalışır (`instance:<id>` anahtarı); `instanceName` değeri instanceId ile zorlanır.
+- Roadmap önceliği: Multi-instance (çoklu sunucu) altyapısı P1’de öne çekildi.
+
+### Removed
+- RCON / GameLabs / CFTools gibi uzaktan admin entegrasyonları kalıcı olarak kapsam dışıdır (dokümantasyon sadeleştirildi).
+
 ## [0.2.5] - 2026-01-22
 
 ### Added

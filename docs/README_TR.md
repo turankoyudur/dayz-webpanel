@@ -7,22 +7,39 @@ Bu doküman, Windows 11 ve Linux üzerinde panelin kurulumu, başlatılması ve 
 - İnternet erişimi (SteamCMD / npm paketleri için)
 - Diskte yeterli alan (DayZ server + modlar için)
 
-## 2) Varsayılan yollar
-Aşağıdaki değerler UI üzerinden değiştirilebilir.
+## 2) Varsayılan yollar ve portatif çalışma
 
-- Windows:
-  - DayZ Server: `E:\steamcmd\steamapps\common\DayZServer`
-  - SteamCMD: `E:\steamcmd\steamcmd.exe`
-  - Profiles: `E:\steamcmd\steamapps\common\DayZServer\profiles`
-  - ApiBridge: `E:\steamcmd\steamapps\common\DayZServer\profiles\ApiBridge`
+Panel, **portatif** bir çalışma modeli üzerine kuruludur. Tüm runtime verileri ve bağımlılıklar proje kök dizinindeki `data/` klasörü altında tutulur.  Bu kök değere **DataRoot** denir (`Settings.dataRoot`). Setup Sihirbazı veya Settings ekranından değiştirilebilir ancak varsayılan olarak panel, harici bir sürücüye ihtiyaç duymadan tamamen kendi klasöründe çalışır.
 
-- Linux:
-  - DayZ Server: `/opt/steamcmd/steamapps/common/DayZServer`
-  - SteamCMD: `/opt/steamcmd/steamcmd.sh`
-  - Profiles: `/opt/steamcmd/steamapps/common/DayZServer/profiles`
-  - ApiBridge: `/opt/steamcmd/steamapps/common/DayZServer/profiles/ApiBridge`
+Varsayılan yollar, aşağıdaki *managed path*'ler üzerinden DataRoot'tan türetilir.  Bu değerler UI üzerinden isteğe göre değiştirilebilir:
 
-> Not: ApiBridge klasörü, DayZ tarafındaki modun JSON dosyalarıyla panelle haberleştiği dizindir.
+- **SteamCMD çalıştırılabilir** (`steamcmdPath`)
+  - Windows: `<dataRoot>/steamcmd/steamcmd.exe`
+  - Linux/macOS: `<dataRoot>/steamcmd/steamcmd.sh`
+  
+  Setup Sihirbazı'nın “Install SteamCMD” adımı bu dosyayı indirir ve kurar.
+
+- **DayZ Dedicated Server klasörü** (`dayzServerPath`)
+  
+  - `<dataRoot>/steamcmd/steamapps/common/DayZServer`
+  
+  SteamCMD üzerinden **223350** uygulama kimliği ile indirilen DayZ server burada yer alır. Klasör içinde `serverDZ.cfg`, `mpmissions/`, `keys/` ve `ServerProfiles/` (veya `profiles/`) gibi alt dizinler bulunur.
+
+- **Profiles klasörü** (`profilesPath`)
+
+  - `<dataRoot>/instances/<instanceName>/profiles`
+  
+  Panel, DayZ serverın *ServerProfiles* klasörüne denk gelen profillerini her instance için burada tutar. RPT logları ve diğer çalışma dosyaları bu dizinde saklanır.
+
+- **ApiBridge klasörü** (`apiBridgePath`)
+  
+  - `<profilesPath>/ApiBridge`
+  
+  DayZ ApiBridge modunun JSON dosyaları (state.json, players.json, commands.json, vb.) bu klasöre yazılır ve panel tarafından okunur.
+
+Bu varsayılan yapılar portatif çalışma içindir; UI üzerinden istediğiniz gibi değiştirebilirsiniz.  Ancak paneli bir USB diske veya taşıması kolay bir klasöre kurmak istiyorsanız `dataRoot` değerini proje klasöründen dışarı çıkarmanıza gerek yoktur.
+
+> Not: ApiBridge klasörü, DayZ tarafındaki modun JSON dosyalarıyla panelin haberleştiği dizindir.
 
 ## 3) Kurulum (Windows 11)
 PowerShell ya da CMD üzerinden:
