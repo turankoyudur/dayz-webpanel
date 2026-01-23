@@ -71,3 +71,38 @@ Bu dosya, yapılan değişiklikleri tarih sırasıyla **net ve anlaşılır** ş
 - UI: Header'a instance seçici bağlandı (Layout). Sidebar'a "Instances" menüsü eklendi.
 - UI: `/instances` yönetim sayfası eklendi (create / rename / set active / archive).
 - SetupGuard whitelist güncellendi: İlk kurulum tamamlanmamışken `/instances` sayfasına erişim açıldı.
+
+## 2026-01-23
+
+### Tamamlananlar
+
+ - **Kalıcı instance seçimi:** Header’daki instance seçici artık seçimi `localStorage` (`dz.instanceId`) anahtarında saklıyor. Sayfa yenilense bile seçili instance korunuyor; geçersiz instance durumunda otomatik geri dönüş uygulanıyor.
+ - **HTTP header:** `client/lib/http.ts` içinde `api()` fonksiyonu, `localStorage`’dan okuduğu instance id ile tüm isteklerde `X-Instance-Id` header’ını ekliyor. Instance seçili değilse header gönderilmiyor ve backend aktif instance’ı kullanıyor.
+ - **Query cache ayrıştırması:** Tüm React Query sorgularının `queryKey` dizilerine `instanceId` eklendi (settings/server/mods/config/logs/apibridge). Bu sayede her instance kendi cache’ini kullanıyor ve instance değişimi sadece ilgili veriyi etkiliyor.
+ - **Mods per-instance:** Mod enable/disable işlemleri ve sunucu başlatılırken `-mod=` parametresinin oluşturulması artık instance’a özel `InstanceMod` kaydına göre yapılıyor. Global `mod.enabled` alanı sadece ilk seed için kullanılıyor.
+ - **Port çakışması kontrolü:** Backend, settings kaydında `serverPort` değerinin diğer instance’larla çakışmadığını doğruluyor ve çakışma durumunda 400 hata dönüyor.
+ - **Dokümantasyon ve sürüm:** `docs/ROADMAP.md` üzerinde multi‑instance bloklayıcıları tamamlandı olarak işaretlendi. `CHANGELOG.md` ve `WORKLOG.md` güncellenerek sürüm numarası `0.3.0-alpha.3` olarak artırıldı.
+ - **Versiyon güncellemesi:** `package.json` içindeki `version` alanı `0.3.0-alpha.3` olarak ayarlandı.
+
+### Notlar
+
+ Bu sprint ile multi‑instance mimarisinin eksik kalan istemci tarafı entegrasyonları tamamlandı. Artık panel, birden fazla instance arasında sorunsuz geçiş yapabiliyor. Her değişiklik, doküman senkronizasyonu (`docs:sync`) sonrası build’e dahil edilmelidir.
+
+## 2026-01-23
+### Tamamlananlar
+- **Build kontrolü iyileştirildi:** `scripts/windows/start.bat` ve `scripts/linux/start.sh` betikleri, artık hem sunucu derlemesinin (`dist/server/node-build.mjs`) hem de istemci derlemesinin (`dist/spa/index.html`) varlığını kontrol ediyor. Önceden yalnızca sunucu derlemesi kontrol edildiğinden, istemci klasörü eksik olduğunda panel `/setup` gibi sayfalarda boş bir ekran veriyordu.  Artık her iki dosya da yoksa `npm run build` çağrılarak tam derleme tetikleniyor.
+ - **Sürüm güncellemesi:** `package.json` sürümü `0.3.0-alpha.4` olarak artırıldı. `CHANGELOG.md` ve `WORKLOG.md` güncellendi.
+
+## 2026-01-23
+
+### Tamamlananlar
+
+ - **Per‑instance mod sıralama UI:** Mods sayfasındaki indirilen modlar listesi artık per‑instance `sortOrder` değerine göre sıralanıyor ve her mod için “↑ / ↓” butonları ile konumları değiştirilebiliyor. Sıralama değişiklikleri backend’e gönderiliyor ve kalıcı hale geliyor. Bu sayede `-mod=` parametresi, UI’da görülen sırayla oluşuyor.
+ - **Backend InstanceMod entegrasyonu:** `mods` API’si per‑instance `enabled` ve `sortOrder` alanlarını `InstanceMod` tablosundan türeterek döndürüyor; `PATCH /mods/enable` artık global `Mod.enabled` yerine `InstanceMod` tablosunu güncelliyor; yeni `PATCH /mods/order` endpoint’i mod sıralamasını güncellemeye izin veriyor. Mod ekleme (`/mods/add`) sırasında, ilgili instance için `InstanceMod` kaydı yoksa oluşturuluyor ve sıranın sonuna ekleniyor.
+ - **Server mod parametreleri:** Server start işlemi, `-mod=` parametresini per‑instance olarak etkin modların sırasına göre oluşturuyor. Global `Mod.enabled` alanı artık `-mod` listesini etkilemiyor.
+ - **Sürüm güncellemesi:** `package.json` sürümü `0.3.0-alpha.5` olarak artırıldı. `CHANGELOG.md` ve `ROADMAP.md` güncellendi; multi‑instance roadmap’inde “Mod sıralama” maddesi tamamlandı olarak işaretlendi.
+
+### Notlar
+
+ Bu sürümle birlikte multi‑instance mimarisinin mod yönetimi tamamen per-instance hale gelmiştir. Kullanıcı artık her sunucu instance’ı için mod listesini bağımsız olarak düzenleyebilir ve modlar doğru sırada başlatılır. Drag‑drop yerine basit yukarı/aşağı butonları kullanılmıştır; ileride bir “drag & drop” komponenti eklemek roadmap’te opsiyonel bir geliştirme olarak duruyor.
+

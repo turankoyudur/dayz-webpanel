@@ -22,14 +22,16 @@ type Player = {
 };
 
 export default function ApiBridge() {
+  // Read the current instance id so that API Bridge queries are scoped per instance
+  const instanceId = typeof window !== "undefined" ? window.localStorage.getItem("dz.instanceId") ?? "" : "";
   const statusQ = useQuery({
-    queryKey: ["apibridge-status"],
+    queryKey: ["apibridge-status", instanceId],
     queryFn: () => api<Status>("/apibridge/status"),
     refetchInterval: 2000,
   });
 
   const playersQ = useQuery({
-    queryKey: ["apibridge-players"],
+    queryKey: ["apibridge-players", instanceId],
     queryFn: () => api<{ players: Player[] }>("/apibridge/players"),
     refetchInterval: 4000,
   });

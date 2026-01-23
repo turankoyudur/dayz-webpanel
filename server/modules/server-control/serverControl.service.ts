@@ -302,7 +302,13 @@ export class ServerControlService {
     const serverCfg = fs.existsSync(instanceCfg) ? instanceCfg : path.join(s.dayzServerPath, s.serverConfigFile);
 
     // Build -mod param (enabled mods -> junction folders under DayZ server dir)
-    const enabledMods = await this.db.mod.findMany({ where: { enabled: true } });
+    // For multi-instance support, use InstanceMod rows to determine which mods are enabled and their order.
+    const instanceMods = await this.db.instanceMod.findMany({
+      where: { instanceId: this.instanceId, enabled: true },
+      include: { mod: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    const enabledMods = instanceMods.map((im) => im.mod);
     await ensureJunctionsForMods({ dayzServerPath: s.dayzServerPath, mods: enabledMods });
 
     const modArg = enabledMods.length

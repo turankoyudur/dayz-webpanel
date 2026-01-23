@@ -15,6 +15,8 @@ type Mod = {
   installedPath: string | null;
   lastUpdateTs: number | null;
   sizeBytes: number | null;
+  // Optional per-instance sort order. Mods with lower sortOrder appear earlier.
+  sortOrder?: number;
 };
 
 type WorkshopSearchResult = {
@@ -37,16 +39,30 @@ export default function Mods() {
   const [searchQuery, setSearchQuery] = useState("");
   const [collectionId, setCollectionId] = useState("");
 
+  // Read the current instance id from localStorage so that query keys are namespaced per instance.
+  const instanceId = typeof window !== "undefined" ? window.localStorage.getItem("dz.instanceId") ?? "" : "";
+
   // --- Data ---
   const mods = useQuery({
-    queryKey: ["mods"],
+    queryKey: ["mods", instanceId],
     queryFn: () => api<Mod[]>("/mods"),
     refetchInterval: 5000,
   });
 
   const list = mods.data ?? [];
   const enabledCount = useMemo(() => list.filter((m) => m.enabled).length, [list]);
-  const downloadedMods = useMemo(() => list.filter((m) => !!m.installedPath), [list]);
+  // Sort downloaded mods by sortOrder so the UI reflects the current ordering.
+  const downloadedMods = useMemo(() => {
+    const modsWithPath = list.filter((m) => !!m.installedPath);
+    return modsWithPath
+      .slice()
+      .sort((a, b) => {
+        const aOrder = a.sortOrder ?? 0;
+        const bOrder = b.sortOrder ?? 0;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return (a.name ?? "").localeCompare(b.name ?? "");
+      });
+  }, [list]);
   const catalogMods = useMemo(() => list.filter((m) => !m.installedPath), [list]);
 
   // --- Mutations ---
@@ -54,14 +70,14 @@ export default function Mods() {
     mutationFn: (id: string) => apiPost<Mod>("/mods/add", { workshopId: id }),
     onSuccess: () => {
       setWorkshopId("");
-      qc.invalidateQueries({ queryKey: ["mods"] });
+      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
       toast({ title: "Mod added" });
     },
     onError: (e: any) => toast({ title: "Add failed", description: `${e.code ?? ""} ${e.message}` }),
   });
 
   const search = useQuery({
-    queryKey: ["mods-search", searchQuery],
+    queryKey: ["mods-search", instanceId, searchQuery],
     queryFn: () =>
       api<WorkshopSearchResponse>(`/mods/search?query=${encodeURIComponent(searchQuery)}`),
     enabled: searchQuery.trim().length >= 2,
@@ -72,7 +88,7 @@ export default function Mods() {
       apiPost<{ total: number; added: number }>("/mods/collection", { collectionId: id }),
     onSuccess: (data) => {
       setCollectionId("");
-      qc.invalidateQueries({ queryKey: ["mods"] });
+      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
       toast({ title: "Collection imported", description: `Added ${data.added}/${data.total} mods.` });
     },
     onError: (e: any) =>
@@ -82,7 +98,7 @@ export default function Mods() {
   const install = useMutation({
     mutationFn: (id: string) => apiPost<any>("/mods/install", { workshopId: id }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["mods"] });
+      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
       toast({ title: "Download complete (or queued)" });
     },
     onError: (e: any) => toast({ title: "Download failed", description: `${e.code ?? ""} ${e.message}` }),
@@ -92,7 +108,7 @@ export default function Mods() {
     mutationFn: (payload: { id: string; enabled: boolean }) =>
       apiPatch<Mod>("/mods/enable", { workshopId: payload.id, enabled: payload.enabled }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["mods"] });
+      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
     },
     onError: (e: any) => toast({ title: "Update failed", description: `${e.code ?? ""} ${e.message}` }),
   });
@@ -105,7 +121,7 @@ export default function Mods() {
   const refresh = useMutation({
     mutationFn: () => apiPost<{ total: number; refreshed: number }>("/mods/refresh", {}),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["mods"] });
+      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
       toast({ title: "Metadata refreshed", description: `${data.refreshed}/${data.total} updated.` });
     },
   });
@@ -119,6 +135,33 @@ export default function Mods() {
       });
     },
   });
+
+  // Update the order of mods for this instance.
+  const setOrder = useMutation({
+    mutationFn: (order: string[]) => apiPatch<any>("/mods/order", { order }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["mods", instanceId] });
+    },
+    onError: (e: any) => toast({ title: "Reorder failed", description: `${e.code ?? ""} ${e.message}` }),
+  });
+
+  // Helpers to move a mod up or down in the list. They compute the new order of workshopIds
+  // based on the current sorted downloadedMods array.
+  const moveUp = (index: number) => {
+    const order = downloadedMods.map((m) => m.workshopId);
+    if (index <= 0) return;
+    const newOrder = [...order];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    setOrder.mutate(newOrder);
+  };
+
+  const moveDown = (index: number) => {
+    const order = downloadedMods.map((m) => m.workshopId);
+    if (index >= order.length - 1) return;
+    const newOrder = [...order];
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    setOrder.mutate(newOrder);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -249,7 +292,7 @@ export default function Mods() {
             </div>
           ) : null}
 
-          {downloadedMods.map((m) => (
+          {downloadedMods.map((m, idx) => (
             <div key={m.workshopId} className="border rounded-md p-3">
               <div className="flex flex-col md:flex-row md:items-center gap-2">
                 <div className="flex-1">
@@ -276,6 +319,26 @@ export default function Mods() {
                     disabled={install.isPending}
                   >
                     Update
+                  </Button>
+
+                  {/* Reorder buttons */}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => moveUp(idx)}
+                    disabled={setOrder.isPending || idx === 0}
+                    title="Move up"
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => moveDown(idx)}
+                    disabled={setOrder.isPending || idx === downloadedMods.length - 1}
+                    title="Move down"
+                  >
+                    ↓
                   </Button>
                 </div>
               </div>

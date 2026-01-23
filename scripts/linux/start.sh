@@ -39,8 +39,14 @@ fi
 log "Ensuring Prisma client + DB schema (db:setup)..."
 "$PM" run db:setup >>"$LOG_FILE" 2>&1
 
-if [[ ! -f "$ROOT/dist/server/node-build.mjs" ]]; then
-  log "Build not found. Running build..."
+# We need both the server and client builds to serve the SPA.  Only checking
+# for the server build can lead to an incomplete UI (blank page) if the
+# client build directory is missing.  See docs/ROADMAP.md: build should be
+# regenerated whenever either output is absent.  In such cases, trigger
+# a full build.  This ensures that dist/spa/index.html and other assets
+# always exist alongside dist/server/node-build.mjs.
+if [[ ! -f "$ROOT/dist/server/node-build.mjs" || ! -f "$ROOT/dist/spa/index.html" ]]; then
+  log "Build not found or incomplete. Running build..."
   "$PM" run build >>"$LOG_FILE" 2>&1
 else
   log "Build exists. Skipping build."

@@ -36,14 +36,19 @@ type Mod = {
 export default function Server() {
   const qc = useQueryClient();
   const { toast } = useToast();
+
+  // Determine the currently selected instance id (if any).  When multi‑instance is active
+  // we persist the selection to localStorage under "dz.instanceId". Including the
+  // instanceId in the query keys ensures each instance maintains its own cache entries.
+  const instanceId = typeof window !== "undefined" ? localStorage.getItem("dz.instanceId") ?? undefined : undefined;
   const status = useQuery({
-    queryKey: ["server-status"],
+    queryKey: ["server-status", instanceId],
     queryFn: () => api<ServerStatus>("/server/status"),
     refetchInterval: 3000,
   });
 
   const mods = useQuery({
-    queryKey: ["mods"],
+    queryKey: ["mods", instanceId],
     queryFn: () => api<Mod[]>("/mods"),
     refetchInterval: 5000,
   });
@@ -51,7 +56,7 @@ export default function Server() {
   const start = useMutation({
     mutationFn: () => apiPost<any>("/server/start"),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["server-status"] });
+      qc.invalidateQueries({ queryKey: ["server-status", instanceId] });
       toast({ title: "Server start requested" });
     },
     onError: (e: any) => toast({ title: "Start failed", description: `${e.code ?? ""} ${e.message}` }),
@@ -60,7 +65,7 @@ export default function Server() {
   const stop = useMutation({
     mutationFn: () => apiPost<any>("/server/stop"),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["server-status"] });
+      qc.invalidateQueries({ queryKey: ["server-status", instanceId] });
       toast({ title: "Server stop requested" });
     },
     onError: (e: any) => toast({ title: "Stop failed", description: `${e.code ?? ""} ${e.message}` }),
@@ -69,7 +74,7 @@ export default function Server() {
   const restart = useMutation({
     mutationFn: () => apiPost<any>("/server/restart"),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["server-status"] });
+      qc.invalidateQueries({ queryKey: ["server-status", instanceId] });
       toast({ title: "Server restart requested" });
     },
     onError: (e: any) => toast({ title: "Restart failed", description: `${e.code ?? ""} ${e.message}` }),
@@ -77,7 +82,7 @@ export default function Server() {
 
   const s = status.data;
   const logTail = useQuery({
-    queryKey: ["logs-rpt-latest"],
+    queryKey: ["logs-rpt-latest", instanceId],
     queryFn: () => api<TailResp>("/logs/rpt/latest?lines=200"),
     refetchInterval: 2000,
     retry: false,

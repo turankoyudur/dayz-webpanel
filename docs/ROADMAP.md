@@ -29,11 +29,11 @@ Bu sprint, tüm modüllerin (settings/server/mods/config/log) **instance bağlam
 ### Sıradaki (bloklayıcılar)
 - [x] UI: Instance seçici (header dropdown) (Layout)
 - [x] UI: `/instances` sayfası (create/archive/set active + rename)
-- [ ] UI: seçimi localStorage’da tutma (opsiyonel; tek kullanıcı local panelde global active yeterli)
-- [ ] Client HTTP: her istekte `X-Instance-Id` header ekleme (seçili instance)
-- [ ] React Query cache key’leri instanceId ile ayrıştırma
-- [ ] Mods: enable/disable ve sıralama instance bazlı (`InstanceMod`) (mevcut global enabled → per-instance)
-- [ ] Port çakışması kontrolü (save sırasında benzersiz port zorlaması)
+ - [x] UI: seçimi localStorage’da tutma (opsiyonel; tek kullanıcı local panelde global active yeterli)
+ - [x] Client HTTP: her istekte `X-Instance-Id` header ekleme (seçili instance)
+ - [x] React Query cache key’leri instanceId ile ayrıştırma
+ - [x] Mods: enable/disable ve sıralama instance bazlı (`InstanceMod`) (mevcut global enabled → per-instance)
+ - [x] Port çakışması kontrolü (save sırasında benzersiz port zorlaması)
 
 ---
 
@@ -44,6 +44,7 @@ Bu sprint, tüm modüllerin (settings/server/mods/config/log) **instance bağlam
 - [x] `doctor` çıktısı: “ne eksik, nasıl düzeltirim” formatında net
 - [x] Setup gate: `setupComplete=false` ise otomatik `/setup` yönlendirmesi
 - [x] Setup API v1: status + create-folders + (Windows) install-steamcmd + install-dayz + complete
+- [x] Start script client build kontrolü: `start.bat` ve `start.sh` betikleri hem sunucu hem istemci derlemelerinin varlığını kontrol eder; eksikse build yeniden yapılır (boş sayfa hatasını önler).
 
 ### P0 — Sıradaki (kısa vadeli)
 - [x] Release paketi scripti (node_modules hariç, data temiz): `scripts/windows/release-zip.ps1`, `scripts/linux/release-zip.sh`
@@ -77,7 +78,7 @@ Not: Temel mod arama + koleksiyon import + enable/disable akışı mevcut.
 - [x] Workshop arama (QueryFiles) + fallback search
 - [x] Collection import
 - [ ] İndirme kuyruğu (concurrency / retry / progress)
-- [ ] Mod sıralama (drag-drop) + preset
+- [x] Mod sıralama (per‑instance ordering via up/down UI; preset TBD)
 - [ ] Güncelleme kontrolü (yalnızca indirilen modlar)
 
 ---

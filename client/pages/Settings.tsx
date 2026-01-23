@@ -16,8 +16,14 @@ export default function Settings() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
+  // Read the current instance id from localStorage to scope query keys per instance.
+  const instanceId =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("dz.instanceId") ?? ""
+      : "";
+
   const q = useQuery({
-    queryKey: ["settings"],
+    queryKey: ["settings", instanceId],
     queryFn: () => api<SettingsModel>("/settings"),
   });
 
@@ -30,8 +36,8 @@ export default function Settings() {
   const save = useMutation({
     mutationFn: () => apiPut<any>("/settings", form),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["settings"] });
-      qc.invalidateQueries({ queryKey: ["config-files"] });
+      qc.invalidateQueries({ queryKey: ["settings", instanceId] });
+      qc.invalidateQueries({ queryKey: ["config-files", instanceId] });
       toast({ title: "Settings saved" });
     },
     onError: (e: any) =>
@@ -39,7 +45,7 @@ export default function Settings() {
   });
 
   const health = useQuery({
-    queryKey: ["settings-health"],
+    queryKey: ["settings-health", instanceId],
     queryFn: () => api<any>("/settings/health"),
     enabled: !!form,
   });

@@ -5,10 +5,26 @@
  * - Converts non-2xx responses into typed errors
  */
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
+  // Determine the current instanceId from localStorage (if set).
+  // Persisting instance selection in localStorage allows the panel to send the selected
+  // instance identifier with every API call. This header is optional; if there is no
+  // instance selected then the server falls back to its own active instance.
+  let instanceHeader: Record<string, string> = {};
+  try {
+    if (typeof window !== "undefined") {
+      const id = window.localStorage.getItem("dz.instanceId");
+      if (id) {
+        instanceHeader = { "X-Instance-Id": id };
+      }
+    }
+  } catch {
+    // localStorage may not be available (SSR); ignore
+  }
   const res = await fetch(`/api${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(instanceHeader),
       ...(options?.headers ?? {}),
     },
   });

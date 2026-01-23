@@ -4,6 +4,39 @@ Bu proje değişiklik günlüğü, **Keep a Changelog** formatını takip edecek
 
 ## [Unreleased]
 
+## [0.3.0-alpha.5] - 2026-01-23
+
+### Added
+ - **Per-instance mod ordering:** Mods on the Downloaded Mods list can now be reordered using Up/Down buttons.  The new order is persisted per instance via the backend and determines the order of the `-mod=` launch argument.  The list is sorted by this order whenever it is fetched.
+ - **Backend support for InstanceMod:** The API now derives `enabled` and `sortOrder` from the `InstanceMod` table.  The `/mods` endpoint returns per‑instance enabled flags and sort orders; `PATCH /mods/order` updates the ordering; `PATCH /mods/enable` now writes to `InstanceMod` instead of the global flag.
+
+### Changed
+ - **Server start uses per-instance mods:** The DayZ server launch command now builds its `-mod=` argument from enabled instance mods sorted by `sortOrder`.  Global `Mod.enabled` is ignored in favour of `InstanceMod`.
+ - **Mod listing sorted by sortOrder:** The UI sorts downloaded mods by the per-instance `sortOrder` so that the display matches the order used at launch.
+
+### Fixed
+ - None.
+
+## [0.3.0-alpha.4] - 2026-01-23
+
+### Fixed
+ - **Build script checks both server and client outputs**: Previously the start scripts (`scripts/windows/start.bat` and `scripts/linux/start.sh`) only looked for the server build at `dist/server/node-build.mjs` to decide whether to run a build.  If the client build (`dist/spa/index.html`) was missing — for example after cleaning up `dist/spa` — the server would still start and serve a blank page at `/setup`.  The scripts now verify that both `dist/server/node-build.mjs` **and** `dist/spa/index.html` exist before skipping the build, ensuring the panel UI is always available.
+
+
+## [0.3.0-alpha.3] - 2026-01-23
+
+### Added
+ - **Persistent instance selection:** the chosen instance in the header dropdown is now saved to `localStorage` (`dz.instanceId`), so the selection survives page reloads.
+ - **HTTP instance header:** the client `api()` wrapper reads the current instance id from `localStorage` and automatically includes an `X-Instance-Id` header on every request. If no instance is selected, the server uses its active default.
+ - **Per-instance query caches:** all React Query `queryKey` arrays now include the current `instanceId` as a prefix, isolating caches between instances.
+ - **Per-instance mod management:** enabling/disabling mods and determining launch order now operate on `InstanceMod` records. The server start command builds the `-mod=` argument from the enabled mods of the selected instance.
+ - **Port conflict validation:** when saving settings, the backend validates that `serverPort` is unique across instances and returns a `400 VALIDATION` error if a conflict is detected.
+
+### Changed
+ - **Instance selection UI:** instance changes persist to `localStorage` and automatically reload to prevent cross-instance cache confusion.
+ - **Cache invalidation:** all invalidations in the frontend now include `instanceId` in their `queryKey`, ensuring only the relevant instance’s caches are cleared.
+ - **Documentation updates:** the roadmap items for multi‑instance blockers are marked as complete, and the worklog reflects these changes.
+
 ## [0.3.0-alpha.2] - 2026-01-22
 
 ### Added

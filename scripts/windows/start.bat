@@ -27,8 +27,13 @@ call npm run db:setup >> "%LOG_FILE%" 2>&1
 if errorlevel 1 goto :error
 
 call :log "Checking build output..."
-if not exist "%ROOT%\dist\server\node-build.mjs" (
-  call :log "Build not found. Running build..."
+rem Both server (dist\server\node-build.mjs) and client (dist\spa\index.html) are required.
+rem Checking only the server build can skip a necessary client build and lead to a blank page.
+if not exist "%ROOT%\dist\server\node-build.mjs" ( set "NEED_BUILD=1" ) else ( set "NEED_BUILD=" )
+if not exist "%ROOT%\dist\spa\index.html" ( set "NEED_BUILD=1" )
+
+if defined NEED_BUILD (
+  call :log "Build not found or incomplete. Running build..."
   call npm run build >> "%LOG_FILE%" 2>&1
   if errorlevel 1 goto :error
 ) else (

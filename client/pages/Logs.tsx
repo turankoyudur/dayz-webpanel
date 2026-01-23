@@ -19,8 +19,11 @@ export default function Logs() {
   const [file, setFile] = useState<string>("app-current.log");
   const [lines, setLines] = useState<number>(200);
 
+  // Include the current instance id in query keys for per-instance cache isolation
+  const instanceId = typeof window !== "undefined" ? window.localStorage.getItem("dz.instanceId") ?? "" : "";
+
   const index = useQuery({
-    queryKey: ["logs-index"],
+    queryKey: ["logs-index", instanceId],
     queryFn: () => api<LogsIndex>("/logs"),
     refetchInterval: 5000,
   });
@@ -34,7 +37,7 @@ export default function Logs() {
   }, [index.data, file]);
 
   const tail = useQuery({
-    queryKey: ["logs-tail", file, lines],
+    queryKey: ["logs-tail", instanceId, file, lines],
     queryFn: () => api<TailResp>(`/logs/tail?file=${encodeURIComponent(file)}&lines=${lines}`),
     enabled: !!file,
     refetchInterval: 3000,

@@ -8,8 +8,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Configs() {
   const { toast } = useToast();
-  const filesQ = useQuery({ queryKey: ["config-files"], queryFn: () => api<{ files: any[] }>("/config/files") });
-  const rawQ = useQuery({ queryKey: ["servercfg-raw"], queryFn: () => api<{ raw: string }>("/config/servercfg") });
+  // Read the current instance id to namespace queries per instance
+  const instanceId = typeof window !== "undefined" ? window.localStorage.getItem("dz.instanceId") ?? "" : "";
+  const filesQ = useQuery({
+    queryKey: ["config-files", instanceId],
+    queryFn: () => api<{ files: any[] }>("/config/files"),
+  });
+  const rawQ = useQuery({
+    queryKey: ["servercfg-raw", instanceId],
+    queryFn: () => api<{ raw: string }>("/config/servercfg"),
+  });
 
   const [raw, setRaw] = useState("");
 

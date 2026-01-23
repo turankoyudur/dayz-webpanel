@@ -47,7 +47,19 @@ export default function InstanceSelector() {
 
   return (
     <div className="flex items-center gap-2">
-      <Select value={activeId} onValueChange={(id) => m.mutate(id)} disabled={m.isPending || q.isLoading}>
+      <Select
+        value={activeId}
+        onValueChange={(id) => {
+          try {
+            // Persist the selected instance so that API calls can include it automatically.
+            window.localStorage.setItem("dz.instanceId", id);
+          } catch {
+            // localStorage might not be available; ignore
+          }
+          m.mutate(id);
+        }}
+        disabled={m.isPending || q.isLoading}
+      >
         <SelectTrigger className="w-[220px]">
           <SelectValue placeholder="Instance" />
         </SelectTrigger>
