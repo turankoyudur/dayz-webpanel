@@ -7,12 +7,15 @@ Labels: **steamcmd**, **mods**, **ui**, **infra**, **bug**
 > Not: Sprint-2 icin sadece is parcasi (issue) planidir. Kod degisikligi yok.
 
 ## SteamCMD / Workshop
+
 1. **Workshop Search UI + API**
    - Label: steamcmd, mods, ui
-   - Kapsam: text search, title/id/updated/size/required DLC gosterimi, "Add" butonu.
+   - Kapsam: text search, title/id/updated/size/required DLC gosterimi,
+     "Add" butonu.
 2. **Collection import**
    - Label: steamcmd, mods
-   - Kapsam: collection URL/ID parse, modlari listele, tek tikla ekle, bagimlilik raporu.
+   - Kapsam: collection URL/ID parse, modlari listele, tek tikla ekle,
+     bagimlilik raporu.
 3. **Mod install pipeline (queue + retry)**
    - Label: steamcmd, mods
    - Kapsam: ayni anda x indirme, progress, retry.
@@ -21,27 +24,30 @@ Labels: **steamcmd**, **mods**, **ui**, **infra**, **bug**
    - Kapsam: -mod/-serverMod ayrimi, drag-drop siralama, preset profilleri.
 
 ## Config Yonetimi
-5. **serverDZ.cfg editor**
+
+1. **serverDZ.cfg editor**
    - Label: ui, infra
    - Kapsam: parse + edit + save, validation, diff gorunumu.
-6. **Profil/instance config**
+2. **Profil/instance config**
    - Label: infra
    - Kapsam: instance config sync, clone/export/import.
 
 ## UX / UI
-7. **Dashboard health cards**
+
+1. **Dashboard health cards**
     - Label: ui
-8. **Log viewer filtre/search/export**
+2. **Log viewer filtre/search/export**
     - Label: ui
-9. **Notification system**
+3. **Notification system**
     - Label: ui
-10. **Role-based auth (opsiyonel)**
+4. **Role-based auth (opsiyonel)**
     - Label: ui, infra
 
 ## Dev / Ops
-11. **CI: build + lint + unit tests**
+
+1. **CI: build + lint + unit tests**
     - Label: infra
-12. **E2E smoke test (/health)**
+2. **E2E smoke test (/health)**
     - Label: infra
-13. **Issue template + PR checklist**
+3. **Issue template + PR checklist**
     - Label: infra
