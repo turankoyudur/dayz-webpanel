@@ -154,6 +154,17 @@ export default function Setup() {
     onError: (e: any) => toast({ title: "Failed", description: `${e.code ?? ""} ${e.message}` }),
   });
 
+  const saveBasics = useMutation({
+    mutationFn: () => apiPut<SettingsModel>("/settings", draft),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["setup-status"] });
+      qc.invalidateQueries({ queryKey: ["settings"] });
+      qc.invalidateQueries({ queryKey: ["settings-health"] });
+      toast({ title: "Saved", description: "Settings updated." });
+    },
+    onError: (e: any) => toast({ title: "Failed to save", description: `${e.code ?? ""} ${e.message}` }),
+  });
+
   if (status.isLoading) {
     return <div className="p-6 text-sm text-muted-foreground">Loading setup...</div>;
   }
@@ -201,17 +212,6 @@ export default function Setup() {
   function goBack() {
     setStep((s) => Math.max(0, s - 1));
   }
-
-  const saveBasics = useMutation({
-    mutationFn: () => apiPut<SettingsModel>("/settings", draft),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["setup-status"] });
-      qc.invalidateQueries({ queryKey: ["settings"] });
-      qc.invalidateQueries({ queryKey: ["settings-health"] });
-      toast({ title: "Saved", description: "Settings updated." });
-    },
-    onError: (e: any) => toast({ title: "Failed to save", description: `${e.code ?? ""} ${e.message}` }),
-  });
 
   return (
     <div className="p-6 space-y-6">
