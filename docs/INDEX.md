@@ -9,12 +9,15 @@ Bu klasördeki dokümanlara hızlı erişim için.
 - **Worklog**: `WORKLOG.md`
 - **Kararlar (Decisions)**: `DECISIONS.md`
 - **Geliştirme notları**: `DEVELOPMENT.md`
-- **Release paketleme**: `../scripts/windows/release-zip.ps1`, `../scripts/linux/release-zip.sh`
-- **Build-doc sync**: `../scripts/docs-sync.mjs` (build öncesi dokümanları `public/docs/` altına taşır)
-- **Plan taslakları**: `PLAN.md`
+- **Release paketleme**: `../scripts/windows/release-zip.ps1`,
+  `../scripts/linux/release-zip.sh`
+- **Build-doc sync**: `../scripts/docs-sync.mjs` (build öncesi dokümanları
+  `public/docs/` altına taşır)
+- **Plan taslaklarıı**: `PLAN.md`
 - **ChatGPT Context (kısa)**: `CHATGPT_CONTEXT_TR.md`
 - **Yeni sohbet prompt'u (tek mesaj)**: `NEW_CHAT_PROMPT_TR.md`
 - **ChatGPT Project talimatları**: `CHATGPT_PROJECT_INSTRUCTIONS_TR.md`
 - **README (TR)**: `README_TR.md`
 
-> Hedef: Her anlamlı değişiklikte en az `CHANGELOG.md`, `WORKLOG.md`, `ROADMAP.md` güncel kalsın.
+> Hedef: Her anlamlı değişiklikte en az `CHANGELOG.md`, `WORKLOG.md`,
+> `ROADMAP.md` güncel kalsın.
